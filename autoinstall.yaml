@@ -1,0 +1,60 @@
+#cloud-config
+autoinstall:
+  version: 1
+  identity:
+    realname: 'Douglas'
+    hostname: notebook-ubuntu
+    username: douglas
+    password: '$y$j9T$uhkxlm8nUQaNu.6rl4k2d.$DIldpYy96OHg8lFjfXfc671BZcGWkPOmaDONGAhGSg3'
+  locale: pt_BR.UTF-8
+  keyboard:
+    layout: br
+  timezone: "America/Recife"
+  storage:
+    layout:
+      name: direct
+  snaps:
+    - name: code
+      channel: stable
+      classic: true
+    - name: go
+      channel: stable
+      classic: true
+    - name: postman
+      channel: stable
+    - name: dbeaver-ce
+      channel: stable
+    - name: azuredatastudio
+      channel: stable
+    - name: brave
+      channel: stable
+    - name: onlyoffice-desktopeditors
+      channel: stable
+  late-commands:
+    - curtin in-target -- apt update
+    - curtin in-target -- apt install -y filezilla
+    # Instalação do Docker Engine
+    - curtin in-target -- bash -c "curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg"
+    - curtin in-target -- bash -c "echo 'deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu jammy stable' > /etc/apt/sources.list.d/docker.list"
+    - curtin in-target -- apt update
+    - curtin in-target -- apt install -y docker-ce docker-ce-cli containerd.io
+    - curtin in-target -- apt install -y docker-compose-plugin
+    - curtin in-target -- usermod -aG docker douglas
+    # Instalação do Git e Git Flow
+    - curtin in-target -- apt install -y git git-flow
+    # Instalação do ZSH e Oh-My-Zsh
+    - curtin in-target -- apt install -y zsh curl
+    - curtin in-target -- runuser -l douglas -c "sh -c \"\$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)\""
+    - curtin in-target -- runuser -l douglas -c "git clone https://github.com/spaceship-prompt/spaceship-prompt.git ~/.oh-my-zsh/custom/themes/spaceship-prompt --depth=1"
+    - curtin in-target -- runuser -l douglas -c "ln -s ~/.oh-my-zsh/custom/themes/spaceship-prompt/spaceship.zsh-theme ~/.oh-my-zsh/custom/themes/spaceship.zsh-theme"
+    - curtin in-target -- runuser -l douglas -c "git clone https://github.com/zsh-users/zsh-autosuggestions ~/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
+    - curtin in-target -- runuser -l douglas -c "git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting"
+    - curtin in-target -- bash -c "chsh -s /bin/zsh douglas"
+    - curtin in-target -- runuser -l douglas -c "sed -i 's/^ZSH_THEME=.*/ZSH_THEME=\"spaceship\"/' ~/.zshrc"
+    - curtin in-target -- runuser -l douglas -c "sed -i 's/^plugins=.*/plugins=(docker python golang git git-flow zsh-autosuggestions zsh-syntax-highlighting)/' ~/.zshrc"
+  codecs:
+    install: true
+  drivers:
+    install: true
+  updates: all
+  shutdown: reboot
